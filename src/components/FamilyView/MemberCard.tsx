@@ -56,6 +56,10 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   );
 
   const getContextualRelationship = () => {
+    if (member.relationshipDescription) {
+      return member.relationshipDescription;
+    }
+
     if (member.relationship === 'Admin') return 'Administrator';
     
     // Find who this member is related to
@@ -99,7 +103,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
 
   return (
     <BaseCard
-      title={`${member.firstName} ${member.lastName}`}
+      title={member.firstName}
       subtitle={getSubtitle()}
       icon={icon}
       actions={actions}

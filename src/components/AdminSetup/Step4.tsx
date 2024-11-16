@@ -14,16 +14,27 @@ interface Step4Props {
 
 export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [baseMember] = useState(() => {
+    return {
+      id: adminData.id,
+      firstName: adminData.firstName,
+      lastName: adminData.lastName,
+      relationship: 'Admin',
+      relatedTo: null,
+      gender: adminData.gender,
+      birthYear: adminData.birthYear,
+      exactBirthday: adminData.exactBirthday,
+      generationLevel: "0.0",
+      ...initializeTracking(adminData.id, 'System'),
+      universeId
+    };
+  });
 
   const handleFinalize = () => {
     setIsProcessing(true);
     
-    // Generate IDs and initialize tracking metadata
-    const adminId = uuidv4();
-    const now = new Date().toISOString();
-    const adminTracking = initializeTracking(adminId, 'System');
+    const adminTracking = initializeTracking(adminData.id, 'System');
 
-    // Prepare final admin data with complete metadata
     const finalData: AdminData = {
       ...adminData,
       ...adminTracking,
@@ -35,7 +46,6 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
         defaultLanguage: 'de',
         timezone: 'Europe/Berlin'
       },
-      // Enhance family members with complete metadata
       familyBox: adminData.familyBox.map(member => ({
         ...member,
         ...initializeTracking(member.id || uuidv4(), 'System'),
@@ -43,11 +53,11 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
         generationLevel: getGenerationLevel(member.relationship),
         taxClass: determineInheritanceTaxClass(member.relationship, {
           fromPerson: member.id,
-          toPerson: adminId
+          toPerson: adminData.id
         }),
-        relatedTo: adminId
+        relatedTo: adminData.id,
+        relationshipDescription: `${adminData.firstName}'s ${member.relationship}`
       })),
-      // Enhance assets with complete metadata
       assetBox: adminData.assetBox.map(asset => ({
         ...asset,
         ...initializeTracking(asset.id || uuidv4(), 'System'),
@@ -58,7 +68,6 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
     onNext(finalData);
   };
 
-  // Rest of the component remains the same...
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString();
   };
@@ -96,7 +105,6 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
           </div>
 
           <div className="space-y-8">
-            {/* Universe Information */}
             <section>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Universe</h3>
               {renderMetadataSection('Universe Metadata', {
@@ -109,9 +117,17 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
               }, <Database className="w-5 h-5 text-blue-500" />)}
             </section>
 
-            {/* Admin Information */}
             <section>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Admin</h3>
+              
+              {renderMetadataSection('Base Member Information', {
+                'ID': baseMember.id,
+                'Relationship': baseMember.relationship,
+                'Related To': baseMember.relatedTo,
+                'Generation Level': baseMember.generationLevel,
+                'Universe ID': baseMember.universeId
+              }, <Shield className="w-5 h-5 text-red-500" />)}
+
               {renderMetadataSection('Basic Information', {
                 'Admin ID': adminData.id,
                 'Name': `${adminData.firstName} ${adminData.lastName}`,
@@ -136,7 +152,6 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
               }, <Settings className="w-5 h-5 text-purple-500" />)}
             </section>
 
-            {/* Family Members */}
             {adminData.familyBox.length > 0 && (
               <section>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Family Members</h3>
@@ -149,7 +164,7 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {renderMetadataSection('Basic Information', {
                           'Member ID': member.id,
-                          'Relationship': member.relationship,
+                          'Relationship': `${adminData.firstName}'s ${member.relationship}`,
                           'Gender': member.gender,
                           'Birth': member.exactBirthday || member.birthYear
                         }, <Users className="w-5 h-5 text-blue-500" />)}
@@ -174,7 +189,6 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
               </section>
             )}
 
-            {/* Assets */}
             {adminData.assetBox.length > 0 && (
               <section>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Assets</h3>

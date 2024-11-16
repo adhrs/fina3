@@ -9,6 +9,21 @@ export const generateTestData = (): AdminData => {
   const adminId = uuidv4();
   const universeId = uuidv4();
 
+  // Erstelle den baseMember für den Administrator
+  const baseMember = {
+    id: adminId,
+    firstName: "Thomas",
+    lastName: "Weber",
+    relationship: 'Admin',
+    relatedTo: null,
+    gender: "male",
+    birthYear: "",
+    exactBirthday: "1975-06-15",
+    generationLevel: "0.0",
+    ...initializeTracking(adminId, 'System'),
+    universeId
+  };
+
   // Create family members with proper metadata
   const familyBox: FamilyMember[] = [
     {
