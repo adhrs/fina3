@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { FamilyMember } from '../../types/FamilyTypes';
+import { BasicRelationship, FamilyMember, familyValidation } from '../../types/FamilyTypes';
 import { useRelationshipGender } from '../../hooks/useRelationshipGender';
 import { useFamilyRelationships } from '../../hooks/useFamilyRelationships';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface RelatedMemberFormProps {
+  baseMember: FamilyMember;
+  members: FamilyMember[];
   onSubmit: (member: FamilyMember) => void;
   onCancel: () => void;
-  members: FamilyMember[];
-  baseMember: FamilyMember;
 }
 
 export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({ 
+  baseMember, 
+  members, 
   onSubmit, 
-  onCancel,
-  members,
-  baseMember
+  onCancel
 }) => {
+  console.log('Base Member:', baseMember);
+
+  const { user } = useAuth();
+
   const [formData, setFormData] = useState<Partial<FamilyMember>>({
     firstName: '',
     lastName: '',
@@ -40,32 +45,51 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.relationship) return;
+    if (!formData.relationship || !user?.adminData) return;
 
     const now = new Date().toISOString();
     const newMember: FamilyMember = {
       id: crypto.randomUUID(),
       firstName: formData.firstName!,
       lastName: formData.lastName!,
-      relationship: formData.relationship,
+      relationship: formData.relationship as BasicRelationship,
+      relationshipDescription: getRelationshipDescription(baseMember, formData.relationship),
       birthYear: formData.birthYear || '',
       exactBirthday: formData.exactBirthday || '',
       gender: formData.gender as 'male' | 'female' | 'other',
       relatedTo: baseMember.id,
-      creator: adminData.firstName,  // NEU: Nur diese Zeile hinzufügen
+      creator: user.adminData.id,
       createdAt: now,
       updatedAt: now,
-      version: 1
+      version: 1,
+      universeId: user.adminData.universeId
     };
+
+    if (familyValidation.isDuplicate(newMember, members)) {
+      alert(`Es existiert bereits ein ${formData.relationship}`);
+      return;
+    }
 
     onSubmit(newMember);
   };
 
   // Get available relationships for the base member
-  const availableRelationships = getAvailableRelationships(baseMember.id);
+  const availableRelationships: BasicRelationship[] = [
+    'Father',
+    'Mother',
+    'Son',
+    'Daughter',
+    'Spouse',
+    'Brother',
+    'Sister'
+  ];
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <form 
+      role="form"
+      className="p-6 space-y-4"
+      onSubmit={handleSubmit}
+    >
       <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="text-lg font-medium">Add Family Member</h3>
@@ -83,25 +107,31 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label 
+          htmlFor="relationship" 
+          className="block text-sm font-medium text-gray-700"
+        >
           Relationship to {baseMember.firstName}
         </label>
         <select
+          id="relationship"
+          name="relationship"
           required
           value={formData.relationship}
-          onChange={(e) => handleRelationshipChange(e.target.value)}
+          onChange={(e) => handleRelationshipChange(e.target.value as BasicRelationship)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="">Select relationship</option>
-          {availableRelationships.map(rel => (
+          {availableRelationships.map((rel) => (
             <option key={rel} value={rel}>{rel}</option>
           ))}
         </select>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">First Name</label>
+        <label htmlFor="firstName">First Name</label>
         <input
+          id="firstName"
           type="text"
           required
           value={formData.firstName}
@@ -111,8 +141,9 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Last Name</label>
+        <label htmlFor="lastName">Last Name</label>
         <input
+          id="lastName"
           type="text"
           required
           value={formData.lastName}
@@ -143,11 +174,18 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
 
       {showGenderField && formData.relationship === 'Spouse' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700">Gender</label>
+          <label 
+            htmlFor="gender"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Gender
+          </label>
           <select
+            id="gender"
+            name="gender"
             required
             value={formData.gender}
-            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+            onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="">Select gender</option>
@@ -175,4 +213,42 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
       </div>
     </form>
   );
+};
+
+const getRelationshipDescription = (baseMember: FamilyMember, relationship: string): string => {
+  // Wenn der baseMember der Vater ist
+  if (baseMember.relationship === 'Father') {
+    switch (relationship) {
+      case 'Father':
+        return "Grandfather (paternal)";
+      case 'Mother':
+        return "Grandmother (paternal)";
+      case 'Son':
+      case 'Daughter':
+        return `${baseMember.firstName}'s ${relationship}`;  // Wird zu Admins Geschwister
+      case 'Spouse':
+        return "Mother";  // Wenn Vater eine Spouse hinzufügt, ist es die Mutter
+      default:
+        return relationship;
+    }
+  }
+
+  // Wenn der baseMember die Spouse ist
+  if (baseMember.relationship === 'Spouse') {
+    switch (relationship) {
+      case 'Father':
+        return "Father-in-law";
+      case 'Mother':
+        return "Mother-in-law";
+      case 'Brother':
+        return "Brother-in-law";
+      case 'Sister':
+        return "Sister-in-law";
+      default:
+        return relationship;
+    }
+  }
+
+  // Standard Beschreibung
+  return `${baseMember.firstName}'s ${relationship}`;
 };
