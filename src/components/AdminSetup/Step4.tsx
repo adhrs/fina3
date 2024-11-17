@@ -49,6 +49,7 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
       familyBox: adminData.familyBox.map(member => ({
         ...member,
         ...initializeTracking(member.id || uuidv4(), 'System'),
+        creator: adminData.firstName,
         universeId,
         generationLevel: getGenerationLevel(member.relationship),
         taxClass: determineInheritanceTaxClass(member.relationship, {

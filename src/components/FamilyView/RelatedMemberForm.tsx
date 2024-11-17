@@ -52,6 +52,7 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
       exactBirthday: formData.exactBirthday || '',
       gender: formData.gender as 'male' | 'female' | 'other',
       relatedTo: baseMember.id,
+      creator: adminData.firstName,  // NEU: Nur diese Zeile hinzufügen
       createdAt: now,
       updatedAt: now,
       version: 1

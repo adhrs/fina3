@@ -237,21 +237,21 @@ export const DevToolsPanel: React.FC<DevToolsPanelProps> = ({ members }) => {
                             <span className="font-medium">Tracking</span>
                           </div>
                           <div className="pl-5 space-y-1 font-mono text-xs">
-                            {member.createdBy && (
-                              <div>
-                                <span className="text-gray-500">Created By:</span>{' '}
-                                <span className="text-blue-600">{member.createdBy}</span>
-                              </div>
-                            )}
-                            {member.updatedBy && (
-                              <div>
-                                <span className="text-gray-500">Updated By:</span>{' '}
-                                <span className="text-blue-600">{member.updatedBy}</span>
-                              </div>
-                            )}
+                            <div>
+                              <span className="text-gray-500">Created By:</span>{' '}
+                              <span className="text-blue-600">{member.createdBy || 'System'}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Updated By:</span>{' '}
+                              <span className="text-blue-600">{member.updatedBy || 'System'}</span>
+                            </div>
                             <div>
                               <span className="text-gray-500">Version:</span>{' '}
                               <span className="text-purple-600">{member.version || 1}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Creator:</span>{' '}
+                              <span className="text-blue-600">{member.creator || 'N/A'}</span>
                             </div>
                           </div>
                         </div>
@@ -275,6 +275,24 @@ export const DevToolsPanel: React.FC<DevToolsPanelProps> = ({ members }) => {
                                 </span>
                               </div>
                             )}
+                          </div>
+                        </div>
+
+                        {/* Relationship Section */}
+                        <div className="space-y-1">
+                          <div className="flex items-center text-gray-600">
+                            <GitBranch className="w-4 h-4 mr-1" />
+                            <span className="font-medium">Relationship</span>
+                          </div>
+                          <div className="pl-5 space-y-1 font-mono text-xs">
+                            <div>
+                              <span className="text-gray-500">Relationship:</span>{' '}
+                              <span className="text-blue-600">{member.relationship}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Description:</span>{' '}
+                              <span className="text-blue-600">{member.relationshipDescription}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
