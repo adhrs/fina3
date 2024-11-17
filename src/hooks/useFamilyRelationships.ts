@@ -59,84 +59,55 @@ export const useFamilyRelationships = (members: FamilyMember[]) => {
     const member = members.find(m => m.id === memberId);
     if (!member) return [];
 
-    const memberRelations = existingRelationships[memberId] || {
-      spouses: [],
-      fathers: [],
-      mothers: [],
-      children: [],
-      siblings: []
-    };
+    // Globale Checks
+    const familyHasMother = members.some(m => 
+      m.relationship === 'Mother' || 
+      m.relationshipDescription?.includes("Mother")
+    );
+    const familyHasFather = members.some(m => 
+      m.relationship === 'Father' || 
+      m.relationshipDescription?.includes("Father")
+    );
 
-    const hasSpouse = memberRelations.spouses.length > 0;
-    const hasFather = memberRelations.fathers.length > 0;
-    const hasMother = memberRelations.mothers.length > 0;
+    // NEU: Spouse Checks
+    const memberHasSpouse = members.some(m => 
+      m.relatedTo === memberId && m.relationship === 'Spouse'
+    );
+    const isSpouseOfMember = members.some(m =>
+      member.relatedTo === m.id && member.relationship === 'Spouse'
+    );
+    const hasSpouse = memberHasSpouse || isSpouseOfMember;
 
     const options: string[] = [];
 
-    // Admin can add any relationship except what already exists
+    // Admin's Optionen
     if (isAdmin(member)) {
       if (!hasSpouse) options.push('Spouse');
-      if (!hasFather) options.push('Father');
-      if (!hasMother) options.push('Mother');
-      options.push('Son', 'Daughter', 'Brother', 'Sister');
+      if (!familyHasFather) options.push('Father');
+      if (!familyHasMother) options.push('Mother');
+      options.push('Son', 'Daughter');
       return options;
     }
 
-    // Father's available relationships
+    // Vater's Optionen
     if (member.relationship === 'Father') {
-      if (!hasSpouse) options.push('Spouse'); // Can add spouse (admin's mother)
-      if (!hasFather) options.push('Father'); // Can add his father (admin's grandfather)
-      if (!hasMother) options.push('Mother'); // Can add his mother (admin's grandmother)
-      options.push('Son', 'Daughter'); // Can add more children (admin's siblings)
-      options.push('Brother', 'Sister'); // Can add siblings (admin's uncles/aunts)
+      // Kann nur Spouse hinzufügen wenn keine Mutter existiert
+      if (!hasSpouse && !familyHasMother) options.push('Spouse');
+      options.push('Son', 'Daughter');
       return options;
     }
 
-    // Mother has same options as father
+    // Mutter's Optionen
     if (member.relationship === 'Mother') {
-      if (!hasSpouse) options.push('Spouse');
-      if (!hasFather) options.push('Father');
-      if (!hasMother) options.push('Mother');
-      options.push('Son', 'Daughter');
-      options.push('Brother', 'Sister');
-      return options;
-    }
-
-    // Sister's available relationships
-    if (member.relationship === 'Sister') {
-      if (!hasSpouse) options.push('Spouse');
-      // Can only add parents if they don't exist in the family tree
-      const familyHasFather = members.some(m => m.relationship === 'Father');
-      const familyHasMother = members.some(m => m.relationship === 'Mother');
-      if (!familyHasFather && !hasFather) options.push('Father');
-      if (!familyHasMother && !hasMother) options.push('Mother');
-      options.push('Son', 'Daughter'); // Can add children (admin's nieces/nephews)
-      return options;
-    }
-
-    // Brother has same options as sister
-    if (member.relationship === 'Brother') {
-      if (!hasSpouse) options.push('Spouse');
-      const familyHasFather = members.some(m => m.relationship === 'Father');
-      const familyHasMother = members.some(m => m.relationship === 'Mother');
-      if (!familyHasFather && !hasFather) options.push('Father');
-      if (!familyHasMother && !hasMother) options.push('Mother');
+      // Kann nur Spouse hinzufügen wenn kein Vater existiert
+      if (!hasSpouse && !familyHasFather) options.push('Spouse');
       options.push('Son', 'Daughter');
       return options;
     }
 
-    // Children (Son/Daughter) can only add spouse and their own children
-    if (member.relationship === 'Son' || member.relationship === 'Daughter') {
+    // Geschwister Optionen
+    if (member.relationship === 'Brother' || member.relationship === 'Sister') {
       if (!hasSpouse) options.push('Spouse');
-      options.push('Son', 'Daughter');
-      return options;
-    }
-
-    // Spouse can add parents, siblings, and children
-    if (member.relationship === 'Spouse') {
-      if (!hasFather) options.push('Father');
-      if (!hasMother) options.push('Mother');
-      options.push('Brother', 'Sister');
       options.push('Son', 'Daughter');
       return options;
     }
