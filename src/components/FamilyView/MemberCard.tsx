@@ -56,11 +56,21 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   );
 
   const getContextualRelationship = () => {
+    // If there's a custom description, use it
     if (member.relationshipDescription) {
       return member.relationshipDescription;
     }
 
+    // Get admin's first name for contextual descriptions
+    const adminFirstName = adminData?.firstName || 'Admin';
+
+    // If this is the admin, return Administrator
     if (member.relationship === 'Admin') return 'Administrator';
+    
+    // For direct relationships to admin (siblings, children, etc)
+    if (member.relatedTo === adminData?.id) {
+      return `${adminFirstName}'s ${member.relationship}`;
+    }
     
     // Find who this member is related to
     const relatedMember = adminData?.familyBox?.find(m => m.id === member.relatedTo);
@@ -73,7 +83,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
             m.id === member.relatedTo && 
             (m.relationship === 'Father' || m.relationship === 'Mother')
           )) {
-        return `Thomas's ${member.relationship === 'Son' ? 'Brother' : 'Sister'}`;
+        return `${adminFirstName}'s ${member.relationship === 'Son' ? 'Brother' : 'Sister'}`;
       }
       return member.relationship;
     }
@@ -86,10 +96,11 @@ export const MemberCard: React.FC<MemberCardProps> = ({
     // Handle parent's children (admin's siblings)
     if ((relatedMember.relationship === 'Father' || relatedMember.relationship === 'Mother') &&
         (member.relationship === 'Son' || member.relationship === 'Daughter')) {
-      return `Thomas's ${member.relationship === 'Son' ? 'Brother' : 'Sister'}`;
+      return `${adminFirstName}'s ${member.relationship === 'Son' ? 'Brother' : 'Sister'}`;
     }
 
-    return member.relationship;
+    // For any other relationships, show who they're related to
+    return `${relatedMember.firstName}'s ${member.relationship}`;
   };
 
   const getSubtitle = () => {
