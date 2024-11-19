@@ -3,16 +3,7 @@ import { AdminData } from '../types/admin';
 import { Contact } from '../types/ContactTypes';
 import { useUniverse } from './UniverseContext';
 import { v4 as uuidv4 } from 'uuid';
-
-interface User {
-  id: string;
-  email: string;
-  isSetupComplete: boolean;
-  universeId?: string;
-  adminData?: AdminData & {
-    contacts?: Contact[];
-  };
-}
+import { User, AdminUser, CollaboratorUser } from '../types/UserTypes';
 
 interface AuthContextType {
   user: User | null;
@@ -90,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser({
       id: userId,
       email,
+      role: 'admin',
       isSetupComplete: false,
       universeId: universe.id
     });
@@ -98,7 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeSetup = async (adminData: AdminData) => {
     if (!user) throw new Error('No user logged in');
 
-    // Create admin contact
+    console.log('Setting up admin with role:', adminData.role);
+
     const adminContact: Contact = {
       id: `contact-${adminData.id}`,
       name: `${adminData.firstName} ${adminData.lastName}`,
@@ -110,20 +103,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }],
       role: 'Administrator',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      version: 1
     };
 
-    // Add admin contact to contacts list
     const contacts = [adminContact];
 
     const updatedUser = {
       ...user,
+      role: 'admin',
       isSetupComplete: true,
       adminData: {
         ...adminData,
         contacts
       }
     };
+
+    console.log('Updated user:', updatedUser);
 
     localStorage.setItem(`user_${user.email}`, JSON.stringify({
       ...updatedUser,

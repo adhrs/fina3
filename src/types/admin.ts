@@ -1,5 +1,6 @@
 import { RelationshipType } from './relationshipTypes';
 import { TrackingMetadata } from './tracking';
+import { BasicRelationship } from './FamilyTypes';
 
 export type Gender = 'male' | 'female' | 'other' | '';
 
@@ -14,32 +15,51 @@ export interface BasePerson {
   updatedAt: string;
 }
 
-export interface FamilyMember extends BasePerson {
-  relationship: RelationshipType;
+export interface FamilyMember extends TrackingMetadata {
+  firstName: string;
+  lastName: string;
+  gender: 'male' | 'female' | 'other';
+  birthYear: string;
+  exactBirthday: string;
+  relationship: BasicRelationship;
+  relationshipDescription?: string;
   generationLevel?: string;
   taxClass?: number;
+  relatedTo: string | null;
+  universeId: string;
 }
 
-export interface Asset {
-  id: string;
+export interface Asset extends TrackingMetadata {
   type: 'company' | 'personal';
   name?: string;
   companyType?: string;
-  country?: string;
   assetType?: string;
   realEstateType?: string;
   realEstateName?: string;
   otherAssetType?: string;
   otherAssetName?: string;
-  createdAt: string;
-  updatedAt: string;
+  country: string;
+  universeId: string;
 }
 
-export interface AdminData extends BasePerson, TrackingMetadata {
+export interface AdminData extends TrackingMetadata {
+  firstName: string;
+  lastName: string;
+  gender: string;
+  birthYear: string;
+  exactBirthday: string;
   country: string;
-  generationLevel: string;
   familyBox: FamilyMember[];
   assetBox: Asset[];
+  generationLevel: string;
+  universeId: string;
+  role: 'admin';
+  status: 'active';
+  settings: {
+    defaultCurrency: string;
+    defaultLanguage: string;
+    timezone: string;
+  };
 }
 
 export interface GenerationInfo {
@@ -47,7 +67,7 @@ export interface GenerationInfo {
   inheritanceTaxClass: 1 | 2 | 3;
 }
 
-export interface EnrichedFamilyMember extends FamilyMember, GenerationInfo {
+export interface EnrichedFamilyMember extends Omit<FamilyMember, 'generationLevel'>, GenerationInfo {
   children?: string[];
   parents?: string[];
   siblings?: string[];

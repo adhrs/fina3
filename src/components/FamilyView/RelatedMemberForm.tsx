@@ -4,6 +4,8 @@ import { BasicRelationship, FamilyMember, familyValidation } from '../../types/F
 import { useRelationshipGender } from '../../hooks/useRelationshipGender';
 import { useFamilyRelationships } from '../../hooks/useFamilyRelationships';
 import { useAuth } from '../../contexts/AuthContext';
+import { isAdmin } from '../../types/UserTypes';
+import { AdvancedMemberOptions } from './forms/AdvancedMemberOptions';
 
 interface RelatedMemberFormProps {
   baseMember: FamilyMember;
@@ -12,6 +14,23 @@ interface RelatedMemberFormProps {
   onCancel: () => void;
 }
 
+/**
+ * RelatedMemberForm
+ * 
+ * Ein Formular zur Erstellung/Bearbeitung von Familienmitgliedern.
+ * Ermöglicht die Eingabe von Basis-Informationen wie Name, Geburtsdatum etc.
+ * Enthält auch erweiterte Optionen (AdvancedMemberOptions) für Admin-User.
+ * 
+ * @component
+ * @example
+ * <RelatedMemberForm 
+ *   baseMember={existingMember}
+ *   members={familyMembers}
+ *   onSubmit={handleSubmit}
+ *   onCancel={handleCancel}
+ * />
+ */
+
 export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({ 
   baseMember, 
   members, 
@@ -19,8 +38,9 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
   onCancel
 }) => {
   console.log('Base Member:', baseMember);
-
   const { user } = useAuth();
+  console.log('Current user role:', user?.role);  // Debug log
+  console.log('Is admin?', user && isAdmin(user));  // Debug log
 
   const [formData, setFormData] = useState<Partial<FamilyMember>>({
     firstName: '',
@@ -28,19 +48,41 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
     relationship: '',
     birthYear: '',
     exactBirthday: '',
-    gender: '',
+    gender: 'male' as const,
+    isAdopted: false,
+    isStepChild: false,
+    adoptionDate: ''
   });
 
   const { showGenderField, determineGender } = useRelationshipGender();
   const { getAvailableRelationships } = useFamilyRelationships(members);
 
-  const handleRelationshipChange = (relationship: string) => {
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
+  const isUserAdmin = user && isAdmin(user);  // Helper für Admin-Check
+
+  const handleRelationshipChange = (relationship: RelationshipType) => {
     const gender = determineGender(relationship);
     setFormData(prev => ({
       ...prev,
       relationship,
       gender: gender || prev.gender
     }));
+  };
+
+  const handleAdvancedOptionsChange = (updates: Partial<FamilyMember>) => {
+    setFormData(prev => ({
+      ...prev,
+      ...updates
+    }));
+  };
+
+  const handleAdvancedToggle = () => {
+    if (!isUserAdmin) {
+      alert('Only administrators can modify advanced member information.');
+      return;
+    }
+    setIsAdvancedOpen(!isAdvancedOpen);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,13 +98,15 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
       relationshipDescription: getRelationshipDescription(baseMember, formData.relationship),
       birthYear: formData.birthYear || '',
       exactBirthday: formData.exactBirthday || '',
-      gender: formData.gender as 'male' | 'female' | 'other',
+      gender: formData.gender!,
       relatedTo: baseMember.id,
-      creator: user.adminData.id,
       createdAt: now,
       updatedAt: now,
       version: 1,
-      universeId: user.adminData.universeId
+      universeId: user.adminData.universeId,
+      isAdopted: formData.isAdopted,
+      isStepChild: formData.isStepChild,
+      adoptionDate: formData.adoptionDate
     };
 
     if (familyValidation.isDuplicate(newMember, members)) {
@@ -185,7 +229,10 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
             name="gender"
             required
             value={formData.gender}
-            onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+            onChange={(e) => setFormData(prev => ({ 
+              ...prev, 
+              gender: e.target.value as 'male' | 'female' | 'other'
+            }))}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="">Select gender</option>
@@ -195,6 +242,13 @@ export const RelatedMemberForm: React.FC<RelatedMemberFormProps> = ({
           </select>
         </div>
       )}
+
+      <AdvancedMemberOptions
+        isOpen={isAdvancedOpen}
+        onToggle={handleAdvancedToggle}
+        formData={formData}
+        onChange={handleAdvancedOptionsChange}
+      />
 
       <div className="flex justify-end space-x-3 pt-4">
         <button

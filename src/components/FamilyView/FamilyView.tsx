@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { FamilyMember } from '../../types/FamilyTypes';
+import { AdminData, AdminUser } from '../../types/admin';
 import { MemberCard } from './MemberCard';
 import { MemberForm } from './MemberForm';
 import { RelatedMemberForm } from './RelatedMemberForm';
 import { MemberDetails } from './MemberDetails';
 import { SpouseSectionLogic } from './SpouseSectionLogic';
 import { useAuth } from '../../contexts/AuthContext';
+import { isAdmin } from '../../types/UserTypes';
 import { groupFamilyMembers } from '../../utils/familyGroupingUtils';
 
 export const FamilyView: React.FC = () => {
@@ -17,9 +19,22 @@ export const FamilyView: React.FC = () => {
   const [formType, setFormType] = useState<'new' | 'related'>('new');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const admin = user?.adminData;
-  // Only include familyBox members, handle admin separately
-  const familyMembers = admin?.familyBox || [];
+  console.log('Current user:', user);
+  console.log('User role:', user?.role);
+
+  const isUserAdmin = user && isAdmin(user);
+  console.log('Is admin?', isUserAdmin);
+  
+  const adminData = isUserAdmin ? (user as AdminUser).adminData : null;
+  console.log('Admin data:', adminData);
+  
+  const familyMembers = adminData?.familyBox || [];
+  console.log('Family members:', familyMembers);
+  
+  const spouse = familyMembers.find((m: FamilyMember) => 
+    m.relationship === 'Spouse' && 
+    m.relatedTo === adminData?.id
+  );
 
   // Use the groupFamilyMembers utility to organize members
   const groupedMembers = groupFamilyMembers(familyMembers);
@@ -113,6 +128,26 @@ export const FamilyView: React.FC = () => {
     }))
     .filter(group => group.members.length > 0);
 
+  // Konvertiere adminData in ein FamilyMember-Objekt für die SpouseSectionLogic
+  const adminAsFamilyMember: FamilyMember = adminData ? {
+    id: adminData.id,
+    firstName: adminData.firstName,
+    lastName: adminData.lastName,
+    gender: adminData.gender as 'male' | 'female' | 'other',
+    birthYear: adminData.birthYear,
+    exactBirthday: adminData.exactBirthday,
+    relationship: 'Admin',
+    relationshipDescription: 'Root Member',
+    generationLevel: '0.0',
+    relatedTo: null,
+    universeId: adminData.universeId,
+    createdAt: adminData.createdAt,
+    updatedAt: adminData.updatedAt,
+    version: adminData.version,
+    createdBy: adminData.createdBy,
+    updatedBy: adminData.updatedBy
+  } : null;
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -145,15 +180,15 @@ export const FamilyView: React.FC = () => {
 
       <div className="space-y-6">
         {/* Admin section */}
-        {admin && (
+        {adminData && (
           <div className="p-4 border-2 border-blue-200 rounded-lg bg-white shadow-sm bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:8px_8px]">
             <h3 className="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
               Administrator
             </h3>
             <div className="overflow-x-auto">
               <SpouseSectionLogic
-                member={admin}
-                spouse={findSpouse(admin)}
+                member={adminAsFamilyMember}
+                spouse={findSpouse(adminAsFamilyMember)}
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onAddRelation={handleAddRelation}
@@ -197,7 +232,7 @@ export const FamilyView: React.FC = () => {
               />
             ) : (
               <RelatedMemberForm
-                members={[admin!, ...familyMembers]}
+                members={[adminAsFamilyMember!, ...familyMembers]}
                 baseMember={selectedMember!}
                 onSubmit={handleSubmitMember}
                 onCancel={() => setShowForm(false)}
