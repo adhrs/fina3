@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RelatedMemberForm } from '../../components/FamilyView/RelatedMemberForm';
+import { RelatedMemberForm } from '../../components/FamilyView/forms/RelatedMemberForm';
 import { describe, it, expect, vi } from 'vitest';
 import { FamilyMember } from '../../types/FamilyTypes';
 import { AuthProvider } from '../../contexts/AuthContext';

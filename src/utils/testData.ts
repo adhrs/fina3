@@ -11,10 +11,8 @@ export const generateTestData = (): AdminData => {
 
   // Erstelle den baseMember für den Administrator
   const baseMember = {
-    id: adminId,
     firstName: "Thomas",
     lastName: "Weber",
-    relationship: 'Admin',
     relatedTo: null,
     gender: "male",
     birthYear: "",

@@ -15,29 +15,55 @@ interface Step4Props {
 export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [baseMember] = useState(() => {
+    const tracking = initializeTracking(adminData.id, 'System');
     return {
-      id: adminData.id,
+      ...tracking,
       firstName: adminData.firstName,
       lastName: adminData.lastName,
-      relationship: 'Admin',
       relatedTo: null,
       gender: adminData.gender,
       birthYear: adminData.birthYear,
       exactBirthday: adminData.exactBirthday,
       generationLevel: "0.0",
-      ...initializeTracking(adminData.id, 'System'),
-      universeId
+      universeId,
+      relationshipDescription: 'Root Member'
     };
   });
 
   const handleFinalize = () => {
     setIsProcessing(true);
     
-    const adminTracking = initializeTracking(adminData.id, 'System');
+    const tracking = initializeTracking(adminData.id, 'System');
+
+    const familyBox = adminData.familyBox.map(member => ({
+      ...initializeTracking(member.id || uuidv4(), adminData.id),
+      ...member,
+      generationLevel: getGenerationLevel(member.relationship),
+      taxClass: determineInheritanceTaxClass(member.relationship, {
+        fromPerson: member.id,
+        toPerson: adminData.id
+      }),
+      relatedTo: adminData.id,
+      universeId
+    }));
+
+    const assetBox = adminData.assetBox.map(asset => ({
+      ...initializeTracking(asset.id || uuidv4(), adminData.id),
+      ...asset,
+      universeId
+    }));
 
     const finalData: AdminData = {
-      ...adminData,
-      ...adminTracking,
+      ...tracking,
+      firstName: adminData.firstName,
+      lastName: adminData.lastName,
+      gender: adminData.gender,
+      birthYear: adminData.birthYear,
+      exactBirthday: adminData.exactBirthday,
+      country: adminData.country,
+      generationLevel: "0.0",
+      familyBox,
+      assetBox,
       universeId,
       role: 'admin',
       status: 'active',
@@ -45,25 +71,7 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
         defaultCurrency: 'EUR',
         defaultLanguage: 'de',
         timezone: 'Europe/Berlin'
-      },
-      familyBox: adminData.familyBox.map(member => ({
-        ...member,
-        ...initializeTracking(member.id || uuidv4(), 'System'),
-        creator: adminData.firstName,
-        universeId,
-        generationLevel: getGenerationLevel(member.relationship),
-        taxClass: determineInheritanceTaxClass(member.relationship, {
-          fromPerson: member.id,
-          toPerson: adminData.id
-        }),
-        relatedTo: adminData.id,
-        relationshipDescription: `${adminData.firstName}'s ${member.relationship}`
-      })),
-      assetBox: adminData.assetBox.map(asset => ({
-        ...asset,
-        ...initializeTracking(asset.id || uuidv4(), 'System'),
-        universeId
-      }))
+      }
     };
 
     onNext(finalData);
@@ -123,8 +131,7 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
               
               {renderMetadataSection('Base Member Information', {
                 'ID': baseMember.id,
-                'Relationship': baseMember.relationship,
-                'Related To': baseMember.relatedTo,
+                'Related To': baseMember.relatedTo || 'None (Root Member)',
                 'Generation Level': baseMember.generationLevel,
                 'Universe ID': baseMember.universeId
               }, <Shield className="w-5 h-5 text-red-500" />)}
@@ -135,7 +142,8 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
                 'Gender': adminData.gender,
                 'Birth': adminData.exactBirthday || adminData.birthYear,
                 'Country': adminData.country,
-                'Generation Level': adminData.generationLevel
+                'Generation Level': adminData.generationLevel,
+                'Role': adminData.role
               }, <Shield className="w-5 h-5 text-green-500" />)}
 
               {renderMetadataSection('Tracking Information', {

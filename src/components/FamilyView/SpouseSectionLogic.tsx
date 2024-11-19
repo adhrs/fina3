@@ -1,14 +1,14 @@
 import React from 'react';
-import { FamilyMember } from '../../types/FamilyTypes';
+import { FamilyMember, AdminData } from '../../types/FamilyTypes';
 import { MarriageConnector } from './MarriageConnector';
 import { MemberCard } from './MemberCard';
 
 interface SpouseSectionLogicProps {
-  member: FamilyMember;
+  member: FamilyMember | AdminData;
   spouse?: FamilyMember;
-  onEdit?: (member: FamilyMember) => void;
+  onEdit?: (member: FamilyMember | AdminData) => void;
   onDelete?: (id: string) => void;
-  onAddRelation?: (member: FamilyMember) => void;
+  onAddRelation?: (member: FamilyMember | AdminData) => void;
 }
 
 export const SpouseSectionLogic: React.FC<SpouseSectionLogicProps> = ({

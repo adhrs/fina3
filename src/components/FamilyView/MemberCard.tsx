@@ -1,6 +1,6 @@
 import React from 'react';
 import { BaseCard } from '../shared/BaseCard';
-import { FamilyMember } from '../../types/FamilyTypes';
+import { FamilyMember, AdminData } from '../../types/FamilyTypes';
 import { UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -101,6 +101,10 @@ export const MemberCard: React.FC<MemberCardProps> = ({
     return `Born ${birthInfo} • ${relationship}`;
   };
 
+  const isAdmin = (member: FamilyMember | AdminData): member is AdminData => {
+    return 'role' in member && member.role === 'admin';
+  };
+
   return (
     <BaseCard
       title={member.firstName}
@@ -108,7 +112,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
       icon={icon}
       actions={actions}
       onEdit={onEdit ? () => onEdit(member) : undefined}
-      onDelete={member.relationship !== 'Admin' && onDelete ? () => onDelete(member.id) : undefined}
+      onDelete={!isAdmin(member) && onDelete ? () => onDelete(member.id) : undefined}
     />
   );
 };

@@ -4,7 +4,7 @@ import { FamilyMember } from '../../types/FamilyTypes';
 import { AdminData, AdminUser } from '../../types/admin';
 import { MemberCard } from './MemberCard';
 import { MemberForm } from './MemberForm';
-import { RelatedMemberForm } from './RelatedMemberForm';
+import { RelatedMemberForm } from './forms/RelatedMemberForm';
 import { MemberDetails } from './MemberDetails';
 import { SpouseSectionLogic } from './SpouseSectionLogic';
 import { useAuth } from '../../contexts/AuthContext';

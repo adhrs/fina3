@@ -7,26 +7,36 @@ import { Step4 } from './Step4';
 import { AdminData, FamilyMember, Asset } from '../../types/admin';
 import { useUniverse } from '../../contexts/UniverseContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { initializeTracking } from '../../types/tracking';
+import { v4 as uuidv4 } from 'uuid';
 
 export const AdminSetup: React.FC = () => {
   const navigate = useNavigate();
   const { universe } = useUniverse();
   const { completeSetup } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [adminData, setAdminData] = useState<AdminData>({
-    id: '',
-    firstName: '',
-    lastName: '',
-    gender: '',
-    birthYear: '',
-    exactBirthday: '',
-    country: '',
-    familyBox: [],
-    assetBox: [],
-    generationLevel: '0.0',
-    createdAt: '',
-    updatedAt: '',
-    version: 0
+  const [adminData, setAdminData] = useState<AdminData>(() => {
+    const tracking = initializeTracking(uuidv4(), 'System');
+    return {
+      ...tracking,
+      firstName: '',
+      lastName: '',
+      gender: '',
+      birthYear: '',
+      exactBirthday: '',
+      country: '',
+      familyBox: [],
+      assetBox: [],
+      generationLevel: '0.0',
+      universeId: '',
+      role: 'admin',
+      status: 'active',
+      settings: {
+        defaultCurrency: 'EUR',
+        defaultLanguage: 'de',
+        timezone: 'Europe/Berlin'
+      }
+    };
   });
 
   useEffect(() => {
