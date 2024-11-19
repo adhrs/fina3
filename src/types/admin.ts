@@ -1,6 +1,6 @@
 import { RelationshipType } from './relationshipTypes';
 import { TrackingMetadata } from './tracking';
-import { BasicRelationship } from './FamilyTypes';
+import { BasicRelationship, MarriageData } from './FamilyTypes';
 
 export type Gender = 'male' | 'female' | 'other' | '';
 
@@ -27,6 +27,12 @@ export interface FamilyMember extends TrackingMetadata {
   taxClass?: number;
   relatedTo: string | null;
   universeId: string;
+  marriageData?: MarriageData | null;
+  createdAt: string;
+  updatedAt: string;
+  version?: number;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface Asset extends TrackingMetadata {
@@ -55,11 +61,6 @@ export interface AdminData extends TrackingMetadata {
   universeId: string;
   role: 'admin';
   status: 'active';
-  settings: {
-    defaultCurrency: string;
-    defaultLanguage: string;
-    timezone: string;
-  };
 }
 
 export interface GenerationInfo {

@@ -7,6 +7,13 @@ import { SignUpPage } from './pages/SignUpPage';
 import { AdminSetup } from './components/AdminSetup/AdminSetup';
 import { Dashboard } from './components/Dashboard';
 import { useAuth } from './contexts/AuthContext';
+import { UniverseSettings } from './components/Settings/UniverseSettings';
+import { FamilyView } from './components/FamilyView/FamilyView';
+import { CompanyView } from './components/CompanyView/CompanyView';
+import { AssetView } from './components/AssetsView/AssetView';
+import { ContactView } from './components/ContactView/ContactView';
+import { FamilyTreeView } from './components/FamilyTreeView/FamilyTreeView';
+import { AnalyticsView } from './components/AnalyticsView/AnalyticsView';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
@@ -36,13 +43,21 @@ const App: React.FC = () => {
               } 
             />
             <Route 
-              path="/dashboard" 
+              path="/dashboard/*" 
               element={
                 <ProtectedRoute 
                   element={<Dashboard />} 
                 />
-              } 
-            />
+              }
+            >
+              <Route path="family" element={<FamilyView />} />
+              <Route path="company" element={<CompanyView />} />
+              <Route path="assets" element={<AssetView />} />
+              <Route path="family-tree" element={<FamilyTreeView />} />
+              <Route path="contacts" element={<ContactView />} />
+              <Route path="analytics" element={<AnalyticsView />} />
+              <Route path="settings" element={<UniverseSettings />} />
+            </Route>
             <Route path="/" element={<Navigate to="/signin" replace />} />
           </Routes>
         </Router>

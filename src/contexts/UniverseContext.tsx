@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { UniverseSettings } from '../types/universe';
 
 interface Universe {
   id: string;
   adminId: string;
+  settings: UniverseSettings;
   createdAt: string;
   updatedAt: string;
   version: number;
@@ -35,6 +37,11 @@ export const UniverseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const newUniverse: Universe = {
       id: uuidv4(),
       adminId,
+      settings: {
+        defaultCurrency: 'EUR',
+        defaultLanguage: 'de',
+        timezone: 'Europe/Berlin'
+      },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       version: 1

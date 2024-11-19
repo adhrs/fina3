@@ -1,14 +1,20 @@
 import { TrackingMetadata } from './tracking';
 
+export interface UniverseSettings {
+  defaultCurrency: string;
+  defaultLanguage: string;
+  timezone: string;
+}
+
 export interface Universe extends TrackingMetadata {
+  id: string;
   name: string;
-  adminId: string;
   description?: string;
-  settings?: {
-    defaultCurrency?: string;
-    defaultLanguage?: string;
-    timezone?: string;
-  };
+  createdBy: string;
+  settings: UniverseSettings;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
 }
 
 export interface UniverseContext {

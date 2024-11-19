@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AdminData, FamilyMember, Asset } from '../types/admin';
+import { MarriageData } from '../types/FamilyTypes';
 import { getGenerationLevel } from './generationUtils';
 import { determineInheritanceTaxClass } from './inheritanceTaxUtils';
 import { initializeTracking } from '../types/tracking';
@@ -25,19 +26,6 @@ export const generateTestData = (): AdminData => {
     status: 'current',
     createdAt: now,
     updatedAt: now
-  };
-
-  // Erstelle den baseMember für den Administrator
-  const baseMember = {
-    firstName: "Thomas",
-    lastName: "Weber",
-    relatedTo: null,
-    gender: "male",
-    birthYear: "",
-    exactBirthday: "1975-06-15",
-    generationLevel: "0.0",
-    ...initializeTracking(adminId, 'System'),
-    universeId
   };
 
   // Create family members with proper metadata
@@ -148,7 +136,7 @@ export const generateTestData = (): AdminData => {
     }
   ];
 
-  // Create admin data with complete metadata
+  // Create admin data with complete metadata - without settings
   return {
     ...initializeTracking(adminId, adminId),
     firstName: "Thomas",
@@ -162,11 +150,6 @@ export const generateTestData = (): AdminData => {
     assetBox,
     universeId,
     role: 'admin',
-    status: 'active',
-    settings: {
-      defaultCurrency: 'EUR',
-      defaultLanguage: 'de',
-      timezone: 'Europe/Berlin'
-    }
+    status: 'active'
   };
 };
