@@ -9,6 +9,24 @@ export const generateTestData = (): AdminData => {
   const adminId = uuidv4();
   const universeId = uuidv4();
 
+  // Create marriage data for spouse
+  const spouseMarriageData: MarriageData = {
+    id: uuidv4(),
+    date: "2000-06-15",
+    status: 'current',
+    createdAt: now,
+    updatedAt: now
+  };
+
+  // Create marriage data for parents
+  const parentMarriageData: MarriageData = {
+    id: uuidv4(),
+    date: "1970-03-22",
+    status: 'current',
+    createdAt: now,
+    updatedAt: now
+  };
+
   // Erstelle den baseMember für den Administrator
   const baseMember = {
     firstName: "Thomas",
@@ -38,7 +56,8 @@ export const generateTestData = (): AdminData => {
         toPerson: adminId
       }),
       relatedTo: adminId,
-      universeId
+      universeId,
+      marriageData: spouseMarriageData
     },
     {
       ...initializeTracking(uuidv4(), adminId),
@@ -54,7 +73,25 @@ export const generateTestData = (): AdminData => {
         toPerson: adminId
       }),
       relatedTo: adminId,
-      universeId
+      universeId,
+      marriageData: parentMarriageData
+    },
+    {
+      ...initializeTracking(uuidv4(), adminId),
+      firstName: "Helga",
+      lastName: "Weber",
+      relationship: "Mother",
+      birthYear: "1947",
+      exactBirthday: "",
+      gender: "female",
+      generationLevel: getGenerationLevel("Mother"),
+      taxClass: determineInheritanceTaxClass("Mother", {
+        fromPerson: adminId,
+        toPerson: adminId
+      }),
+      relatedTo: adminId,
+      universeId,
+      marriageData: parentMarriageData
     },
     {
       ...initializeTracking(uuidv4(), adminId),

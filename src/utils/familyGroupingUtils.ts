@@ -20,7 +20,6 @@ export interface FamilyGroup {
 }
 
 export const groupFamilyMembers = (members: FamilyMember[]): FamilyGroup[] => {
-  // Filter out admin from regular grouping
   const nonAdminMembers = members.filter(m => m.relationship !== 'Admin');
 
   // Find siblings to track their children
@@ -30,23 +29,23 @@ export const groupFamilyMembers = (members: FamilyMember[]): FamilyGroup[] => {
       .map(m => m.id)
   );
 
-  // Find parents to identify their children (admin's siblings)
-  const parentIds = new Set(
-    nonAdminMembers
-      .filter(m => m.relationship === 'Father' || m.relationship === 'Mother')
-      .map(m => m.id)
-  );
+  // Find parents and group them together
+  const parents = nonAdminMembers.filter(m => ['Father', 'Mother'].includes(m.relationship));
+  const mother = parents.find(m => m.relationship === 'Mother');
+  const father = parents.find(m => m.relationship === 'Father');
+  
+  // If both parents exist, ensure they're next to each other in the array
+  const orderedParents = mother && father ? [mother, father] : parents;
 
   const groups: Record<FamilySection, FamilyMember[]> = {
     admin: members.filter(m => m.relationship === 'Admin'),
     children: nonAdminMembers.filter(m => 
       (m.relationship === 'Son' || m.relationship === 'Daughter') && 
-      !Array.from(siblingIds).includes(m.relatedTo || '') &&
-      !Array.from(parentIds).includes(m.relatedTo || '')
+      !Array.from(siblingIds).includes(m.relatedTo || '')
     ),
     grandchildren: nonAdminMembers.filter(m => ['Grandson', 'Granddaughter'].includes(m.relationship)),
     greatGrandchildren: nonAdminMembers.filter(m => ['Great-Grandson', 'Great-Granddaughter'].includes(m.relationship)),
-    parents: nonAdminMembers.filter(m => ['Father', 'Mother'].includes(m.relationship)),
+    parents: orderedParents,
     inLawParents: nonAdminMembers.filter(m => ['Father-in-law', 'Mother-in-law'].includes(m.relationship)),
     grandparents: nonAdminMembers.filter(m => [
       'Grandfather', 'Grandmother',
@@ -55,7 +54,7 @@ export const groupFamilyMembers = (members: FamilyMember[]): FamilyGroup[] => {
     siblings: nonAdminMembers.filter(m => 
       ['Brother', 'Sister'].includes(m.relationship) ||
       ((m.relationship === 'Son' || m.relationship === 'Daughter') && 
-       Array.from(parentIds).includes(m.relatedTo || ''))
+       Array.from(siblingIds).includes(m.relatedTo || ''))
     ),
     siblingsChildren: nonAdminMembers.filter(m => 
       (m.relationship === 'Son' || m.relationship === 'Daughter') && 

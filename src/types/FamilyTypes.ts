@@ -10,6 +10,14 @@ export type BasicRelationship =
   | 'Brother'
   | 'Sister';
 
+export interface MarriageData {
+  id: string;
+  date?: string | null;
+  status: 'current' | 'divorced' | 'deceased';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface FamilyMember extends BaseMetadata {
   firstName: string;
   lastName: string;
@@ -26,6 +34,7 @@ export interface FamilyMember extends BaseMetadata {
   isAdopted?: boolean;
   isStepChild?: boolean;
   adoptionDate?: string;
+  marriageData?: MarriageData | null;
 }
 
 export const familyValidation = {
@@ -42,7 +51,7 @@ export interface Relationship {
   type: RelationshipType;
   from: string;
   to: string;
-  marriageDate?: string;
+  marriageData?: MarriageData;
 }
 
 export type { RelationshipType };

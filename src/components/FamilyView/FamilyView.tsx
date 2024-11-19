@@ -39,9 +39,27 @@ export const FamilyView: React.FC = () => {
   const groupedMembers = groupFamilyMembers(familyMembers);
 
   const findSpouse = (member: FamilyMember): FamilyMember | undefined => {
-    return familyMembers.find(m => 
-      m.relatedTo === member.id && m.relationship === 'Spouse'
-    );
+    // For regular spouse relationship
+    if (member.relationship === 'Spouse') {
+      return familyMembers.find(m => 
+        m.relatedTo === member.id && m.relationship === 'Spouse'
+      );
+    }
+    
+    // For parent pairs
+    if (member.relationship === 'Mother') {
+      return familyMembers.find(m => 
+        m.relationship === 'Father' && m.marriageData?.id === member.marriageData?.id
+      );
+    }
+    
+    if (member.relationship === 'Father') {
+      return familyMembers.find(m => 
+        m.relationship === 'Mother' && m.marriageData?.id === member.marriageData?.id
+      );
+    }
+
+    return undefined;
   };
 
   const handleAddMember = () => {
@@ -187,7 +205,7 @@ export const FamilyView: React.FC = () => {
             <div className="overflow-x-auto">
               <SpouseSectionLogic
                 member={adminAsFamilyMember}
-                spouse={findSpouse(adminAsFamilyMember)}
+                spouse={spouse}
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onAddRelation={handleAddRelation}
@@ -196,7 +214,7 @@ export const FamilyView: React.FC = () => {
           </div>
         )}
 
-        {/* Other sections */}
+        {/* Other sections - simplified to always use SpouseSectionLogic */}
         {filteredGroups.map(group => (
           <div 
             key={group.section} 
@@ -206,16 +224,31 @@ export const FamilyView: React.FC = () => {
               {group.title}
             </h3>
             <div className="space-y-6 overflow-x-auto">
-              {group.members.map(member => (
-                <SpouseSectionLogic
-                  key={member.id}
-                  member={member}
-                  spouse={findSpouse(member)}
-                  onEdit={handleEditMember}
-                  onDelete={handleDeleteMember}
-                  onAddRelation={handleAddRelation}
-                />
-              ))}
+              {group.section === 'parents' ? (
+                // For parents section, only render the first parent with their spouse
+                group.members.length > 0 && (
+                  <SpouseSectionLogic
+                    key={group.members[0].id}
+                    member={group.members[0]}
+                    spouse={findSpouse(group.members[0])}
+                    onEdit={handleEditMember}
+                    onDelete={handleDeleteMember}
+                    onAddRelation={handleAddRelation}
+                  />
+                )
+              ) : (
+                // For other sections, render each member normally
+                group.members.map(member => (
+                  <SpouseSectionLogic
+                    key={member.id}
+                    member={member}
+                    spouse={findSpouse(member)}
+                    onEdit={handleEditMember}
+                    onDelete={handleDeleteMember}
+                    onAddRelation={handleAddRelation}
+                  />
+                ))
+              )}
             </div>
           </div>
         ))}

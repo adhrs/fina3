@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { AdminData } from '../../types/admin';
+import React, { useState, useEffect } from 'react';
+import { AdminData, FamilyMember } from '../../types/admin';
 import { getGenerationLevel } from '../../utils/generationUtils';
 import { determineInheritanceTaxClass } from '../../utils/inheritanceTaxUtils';
-import { Settings, Users, Building2, Database, Clock, GitBranch, Shield } from 'lucide-react';
+import { Settings, Users, Building2, Database, Clock, GitBranch, Shield, Heart } from 'lucide-react';
 import { initializeTracking } from '../../types/tracking';
 import { v4 as uuidv4 } from 'uuid';
+import { MarriageData } from '../../types/FamilyTypes';
 
 interface Step4Props {
   adminData: AdminData;
@@ -14,6 +15,57 @@ interface Step4Props {
 
 export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processedFamilyBox, setProcessedFamilyBox] = useState<FamilyMember[]>([]);
+  
+  // Process family members when component mounts
+  useEffect(() => {
+    const processedMembers = adminData.familyBox.map(member => {
+      const generationLevel = getGenerationLevel(member.relationship);
+      const taxClass = determineInheritanceTaxClass(member.relationship, {
+        fromPerson: member.id,
+        toPerson: adminData.id
+      });
+
+      return {
+        ...member,
+        generationLevel,
+        taxClass,
+        relatedTo: adminData.id,
+        universeId
+      };
+    });
+
+    // Find mother and father
+    const mother = processedMembers.find(member => member.relationship === 'Mother');
+    const father = processedMembers.find(member => member.relationship === 'Father');
+
+    // If both parents exist, create marriage data for them
+    if (mother && father) {
+      const marriageData: MarriageData = {
+        id: crypto.randomUUID(),
+        date: null,
+        status: 'current',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Update both parents with marriage data
+      const updatedMembers = processedMembers.map(member => {
+        if (member.relationship === 'Mother' || member.relationship === 'Father') {
+          return {
+            ...member,
+            marriageData
+          };
+        }
+        return member;
+      });
+
+      setProcessedFamilyBox(updatedMembers);
+    } else {
+      setProcessedFamilyBox(processedMembers);
+    }
+  }, [adminData.familyBox, adminData.id, universeId]);
+
   const [baseMember] = useState(() => {
     const tracking = initializeTracking(adminData.id, 'System');
     return {
@@ -35,18 +87,6 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
     
     const tracking = initializeTracking(adminData.id, 'System');
 
-    const familyBox = adminData.familyBox.map(member => ({
-      ...initializeTracking(member.id || uuidv4(), adminData.id),
-      ...member,
-      generationLevel: getGenerationLevel(member.relationship),
-      taxClass: determineInheritanceTaxClass(member.relationship, {
-        fromPerson: member.id,
-        toPerson: adminData.id
-      }),
-      relatedTo: adminData.id,
-      universeId
-    }));
-
     const assetBox = adminData.assetBox.map(asset => ({
       ...initializeTracking(asset.id || uuidv4(), adminData.id),
       ...asset,
@@ -62,7 +102,7 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
       exactBirthday: adminData.exactBirthday,
       country: adminData.country,
       generationLevel: "0.0",
-      familyBox,
+      familyBox: processedFamilyBox, // Use the processed family box
       assetBox,
       universeId,
       role: 'admin',
@@ -98,6 +138,47 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
             </span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+
+  const renderFamilyMemberSection = (member: FamilyMember) => (
+    <div key={member.id} className="border border-gray-200 rounded-lg p-4">
+      <h4 className="font-medium text-gray-700 mb-4 pb-2 border-b border-gray-200">
+        {member.firstName} {member.lastName}
+      </h4>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {renderMetadataSection('Basic Information', {
+          'Member ID': member.id,
+          'Relationship': `${adminData.firstName}'s ${member.relationship}`,
+          'Gender': member.gender,
+          'Birth': member.exactBirthday || member.birthYear
+        }, <Users className="w-5 h-5 text-blue-500" />)}
+
+        {renderMetadataSection('Inheritance Information', {
+          'Generation Level': member.generationLevel,
+          'Tax Class': member.taxClass,
+          'Related To': member.relatedTo || 'N/A'
+        }, <GitBranch className="w-5 h-5 text-green-500" />)}
+
+        {(member.relationship === 'Spouse' || member.relationship === 'Mother' || member.relationship === 'Father') 
+          && member.marriageData && renderMetadataSection('Marriage Information', {
+            'Marriage ID': member.marriageData.id,
+            'Marriage Date': member.marriageData.date 
+              ? new Date(member.marriageData.date).toLocaleDateString()
+              : 'Not Set',
+            'Status': member.marriageData.status,
+            'Created At': new Date(member.marriageData.createdAt).toLocaleDateString(),
+            'Updated At': new Date(member.marriageData.updatedAt).toLocaleDateString()
+          }, <Heart className="w-5 h-5 text-red-500" />)}
+
+        {renderMetadataSection('Tracking Information', {
+          'Created At': formatDate(member.createdAt),
+          'Updated At': formatDate(member.updatedAt),
+          'Version': member.version,
+          'Created By': member.createdBy || 'System',
+          'Updated By': member.updatedBy || 'System'
+        }, <Clock className="w-5 h-5 text-orange-500" />)}
       </div>
     </div>
   );
@@ -161,39 +242,11 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
               }, <Settings className="w-5 h-5 text-purple-500" />)}
             </section>
 
-            {adminData.familyBox.length > 0 && (
+            {processedFamilyBox.length > 0 && (
               <section>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Family Members</h3>
                 <div className="space-y-4">
-                  {adminData.familyBox.map((member, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                        {member.firstName} {member.lastName}
-                      </h4>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {renderMetadataSection('Basic Information', {
-                          'Member ID': member.id,
-                          'Relationship': `${adminData.firstName}'s ${member.relationship}`,
-                          'Gender': member.gender,
-                          'Birth': member.exactBirthday || member.birthYear
-                        }, <Users className="w-5 h-5 text-blue-500" />)}
-
-                        {renderMetadataSection('Inheritance Information', {
-                          'Generation Level': member.generationLevel,
-                          'Tax Class': member.taxClass,
-                          'Related To': member.relatedTo || 'N/A'
-                        }, <GitBranch className="w-5 h-5 text-green-500" />)}
-
-                        {renderMetadataSection('Tracking Information', {
-                          'Created At': formatDate(member.createdAt),
-                          'Updated At': formatDate(member.updatedAt),
-                          'Version': member.version,
-                          'Created By': member.createdBy || 'System',
-                          'Updated By': member.updatedBy || 'System'
-                        }, <Clock className="w-5 h-5 text-orange-500" />)}
-                      </div>
-                    </div>
-                  ))}
+                  {processedFamilyBox.map(renderFamilyMemberSection)}
                 </div>
               </section>
             )}

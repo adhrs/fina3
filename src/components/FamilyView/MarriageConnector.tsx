@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { CircleDot } from 'lucide-react';
 
+interface MarriageData {
+  id: string;
+  date?: string;
+  status: 'current' | 'divorced' | 'deceased';
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface MarriageConnectorProps {
-  marriageDate?: string;
+  marriageData?: MarriageData;
   onClick?: () => void;
 }
 
 export const MarriageConnector: React.FC<MarriageConnectorProps> = ({
-  marriageDate,
+  marriageData,
   onClick
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -18,21 +26,26 @@ export const MarriageConnector: React.FC<MarriageConnectorProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
-      title={marriageDate ? `Marriage Date: ${new Date(marriageDate).toLocaleDateString()}` : 'Marriage'}
+      title={marriageData?.date ? `Marriage Date: ${new Date(marriageData.date).toLocaleDateString()}` : 'Marriage'}
+      data-marriage-id={marriageData?.id}
     >
       <div className="relative">
         <CircleDot 
           className={`w-5 h-5 transform -translate-x-1 ${
             isHovered 
               ? 'text-blue-600 stroke-2' 
-              : 'text-gray-400'
+              : marriageData?.status === 'current' 
+                ? 'text-gray-400'
+                : 'text-red-400'
           }`}
         />
         <CircleDot 
           className={`w-5 h-5 transform translate-x-1 absolute top-0 left-0 ${
             isHovered 
               ? 'text-blue-600 stroke-2' 
-              : 'text-gray-400'
+              : marriageData?.status === 'current' 
+                ? 'text-gray-400'
+                : 'text-red-400'
           }`}
         />
       </div>

@@ -1,14 +1,14 @@
 import React from 'react';
-import { FamilyMember, AdminData } from '../../types/FamilyTypes';
+import { FamilyMember } from '../../types/FamilyTypes';
 import { MarriageConnector } from './MarriageConnector';
 import { MemberCard } from './MemberCard';
 
 interface SpouseSectionLogicProps {
-  member: FamilyMember | AdminData;
+  member: FamilyMember;
   spouse?: FamilyMember;
-  onEdit?: (member: FamilyMember | AdminData) => void;
+  onEdit?: (member: FamilyMember) => void;
   onDelete?: (id: string) => void;
-  onAddRelation?: (member: FamilyMember | AdminData) => void;
+  onAddRelation?: (member: FamilyMember) => void;
 }
 
 export const SpouseSectionLogic: React.FC<SpouseSectionLogicProps> = ({
@@ -18,6 +18,16 @@ export const SpouseSectionLogic: React.FC<SpouseSectionLogicProps> = ({
   onDelete,
   onAddRelation
 }) => {
+  // Check if this is a parent marriage (both Mother and Father)
+  const isParentMarriage = 
+    (member.relationship === 'Mother' && spouse?.relationship === 'Father') ||
+    (member.relationship === 'Father' && spouse?.relationship === 'Mother');
+
+  // Get the correct marriage data
+  const marriageData = isParentMarriage 
+    ? member.marriageData || spouse?.marriageData 
+    : spouse?.marriageData;
+
   return (
     <div className="flex items-center justify-start gap-4 min-w-0">
       <div className="w-[350px] min-w-[350px]">
@@ -31,7 +41,10 @@ export const SpouseSectionLogic: React.FC<SpouseSectionLogicProps> = ({
       
       {spouse && (
         <>
-          <MarriageConnector />
+          <MarriageConnector 
+            marriageData={marriageData}
+            onClick={() => onEdit?.(spouse)} 
+          />
           <div className="w-[350px] min-w-[350px]">
             <MemberCard
               member={spouse}
