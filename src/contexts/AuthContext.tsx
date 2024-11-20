@@ -92,6 +92,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     console.log('Setting up admin with role:', adminData.role);
 
+    const familyBox = adminData.familyBox.map(member => {
+      if (member.marriageData) {
+        return member;
+      }
+
+      if (member.relationship === 'Mother' || member.relationship === 'Father') {
+        const spouse = adminData.familyBox.find(m => 
+          (member.relationship === 'Mother' && m.relationship === 'Father') ||
+          (member.relationship === 'Father' && m.relationship === 'Mother')
+        );
+
+        if (spouse?.marriageData) {
+          return {
+            ...member,
+            marriageData: spouse.marriageData
+          };
+        }
+      }
+
+      return member;
+    });
+
     const adminContact: Contact = {
       id: `contact-${adminData.id}`,
       name: `${adminData.firstName} ${adminData.lastName}`,
@@ -115,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isSetupComplete: true,
       adminData: {
         ...adminData,
+        familyBox,
         contacts
       }
     };

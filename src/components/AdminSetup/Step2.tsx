@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AdminData, FamilyMember } from '../../types/admin';
+import { AdminData, FamilyMember, MarriageData } from '../../types/admin';
 import { useRelationshipGender } from '../../hooks/useRelationshipGender';
 
 interface Step2Props {
@@ -32,6 +32,7 @@ export const Step2: React.FC<Step2Props> = ({
         birthYear: '',
         exactBirthday: '',
         gender: '',
+        marriageData: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -51,10 +52,31 @@ export const Step2: React.FC<Step2Props> = ({
       updatedAt: new Date().toISOString()
     };
 
+    if (field === 'relationship' && value === 'Spouse') {
+      const marriageData: MarriageData = {
+        id: crypto.randomUUID(),
+        date: null,
+        status: 'current',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      updatedMembers[index] = {
+        ...updatedMembers[index],
+        marriageData
+      };
+    }
+
+    if (field === 'relationship' && value !== 'Spouse' && updatedMembers[index].marriageData) {
+      updatedMembers[index] = {
+        ...updatedMembers[index],
+        marriageData: null
+      };
+    }
+
     if (field === 'relationship') {
       const gender = determineGender(value);
       if (gender) {
-        updatedMembers[index].gender = gender;
+        updatedMembers[index].gender = gender as 'male' | 'female' | 'other';
       }
     }
 

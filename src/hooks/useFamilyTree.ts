@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FamilyMember, Relationship } from '../types/FamilyTypes';
 import { MemoryService } from '../services/memoryService';
+import { ensureMarriageData } from '../utils/marriageUtils';
 
 const memoryService = MemoryService.getInstance();
 
@@ -19,7 +20,7 @@ export const useFamilyTree = () => {
           memoryService.getRelationships()
         ]);
         
-        setMembers(loadedMembers);
+        setMembers(loadedMembers.map(processFamilyMember));
         setRelationships(loadedRelationships);
         setError(null);
       } catch (err) {
@@ -85,4 +86,14 @@ export const useFamilyTree = () => {
     getMemberById,
     getRelationships,
   };
+};
+
+const processFamilyMember = (member: FamilyMember): FamilyMember => {
+  if (member.relationship === 'Spouse' && (!member.marriageData || !member.marriageData.id)) {
+    return {
+      ...member,
+      marriageData: ensureMarriageData(member.marriageData)
+    };
+  }
+  return member;
 };

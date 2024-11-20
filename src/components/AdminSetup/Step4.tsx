@@ -6,6 +6,7 @@ import { Settings, Users, Building2, Database, Clock, GitBranch, Shield, Heart }
 import { initializeTracking } from '../../types/tracking';
 import { v4 as uuidv4 } from 'uuid';
 import { MarriageData } from '../../types/FamilyTypes';
+import { useUniverse } from '../../contexts/UniverseContext';
 
 interface Step4Props {
   adminData: AdminData;
@@ -14,6 +15,7 @@ interface Step4Props {
 }
 
 export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) => {
+  const { universe } = useUniverse();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedFamilyBox, setProcessedFamilyBox] = useState<FamilyMember[]>([]);
   
@@ -205,6 +207,12 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
                 'Created By': adminData.createdBy || 'System',
                 'Updated By': adminData.updatedBy || 'System'
               }, <Database className="w-5 h-5 text-blue-500" />)}
+
+              {universe?.settings && renderMetadataSection('Settings', {
+                'Currency': universe.settings.defaultCurrency,
+                'Language': universe.settings.defaultLanguage,
+                'Timezone': universe.settings.timezone
+              }, <Settings className="w-5 h-5 text-purple-500" />)}
             </section>
 
             <section>
@@ -234,12 +242,6 @@ export const Step4: React.FC<Step4Props> = ({ adminData, onNext, universeId }) =
                 'Created By': adminData.createdBy || 'System',
                 'Updated By': adminData.updatedBy || 'System'
               }, <Clock className="w-5 h-5 text-orange-500" />)}
-
-              {adminData.settings && renderMetadataSection('Settings', {
-                'Currency': adminData.settings.defaultCurrency,
-                'Language': adminData.settings.defaultLanguage,
-                'Timezone': adminData.settings.timezone
-              }, <Settings className="w-5 h-5 text-purple-500" />)}
             </section>
 
             {processedFamilyBox.length > 0 && (

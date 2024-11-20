@@ -3,7 +3,6 @@ import { FamilySection } from '../utils/familyGroupingUtils';
 
 const DEFAULT_SECTION_ORDER: FamilySection[] = [
   'admin',
-  'spouse',
   'children',
   'grandchildren',
   'greatGrandchildren',

@@ -1,0 +1,29 @@
+/* Override all height limitations in the hierarchy */
+.flex-grow.w-full.bg-\[\#F7F7F8\], /* grandParent */
+.flex-1.relative,                   /* parentElement */
+.rd3t-tree-container,              /* container */
+.rd3t-svg {                        /* svg */
+  height: auto !important;
+  min-height: unset !important;
+  max-height: none !important;
+}
+
+/* Base container styles */
+.rd3t-tree-container {
+  width: 100%;
+  position: relative !important;
+  display: block !important;
+}
+
+/* SVG styles */
+.rd3t-svg {
+  width: 100% !important;
+  display: block !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Disable grab cursor */
+.rd3t-grabbable {
+  cursor: default !important;
+} 

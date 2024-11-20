@@ -10,14 +10,14 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: 'home', label: 'Home', icon: Home },
-  { id: 'family', label: 'Family', icon: UserPlus },
-  { id: 'company', label: 'Company', icon: Building2 },
-  { id: 'assets', label: 'Assets', icon: Briefcase },
-  { id: 'family-tree', label: 'Family Tree', icon: Users },
-  { id: 'contacts', label: 'Contacts', icon: Users },
-  { id: 'analytics', label: 'Analytics', icon: BarChart },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'home', label: 'Home', icon: Home, path: '/dashboard' },
+  { id: 'family', label: 'Family', icon: UserPlus, path: '/dashboard/family' },
+  { id: 'company', label: 'Company', icon: Building2, path: '/dashboard/company' },
+  { id: 'assets', label: 'Assets', icon: Briefcase, path: '/dashboard/assets' },
+  { id: 'family-tree', label: 'Family Tree', icon: Users, path: '/dashboard/family-tree' },
+  { id: 'contacts', label: 'Contacts', icon: Users, path: '/dashboard/contacts' },
+  { id: 'analytics', label: 'Analytics', icon: BarChart, path: '/dashboard/analytics' },
+  { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
