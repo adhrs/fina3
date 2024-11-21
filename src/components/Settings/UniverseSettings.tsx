@@ -3,6 +3,7 @@ import { Settings, Database, Clock, User, Users, Building2, Shield, Heart } from
 import { useUniverse } from '../../contexts/UniverseContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { FamilyMember } from '../../types/FamilyTypes';
+import { AdminData } from '../../types/admin';
 
 export const UniverseSettings: React.FC = () => {
   const { universe } = useUniverse();
@@ -58,7 +59,7 @@ export const UniverseSettings: React.FC = () => {
 
         {(member.relationship === 'Spouse' || member.relationship === 'Mother' || member.relationship === 'Father') 
           && member.marriageData && renderMetadataSection('Marriage Information', {
-            'Marriage ID': member.marriageData.id,
+            'Marriage ID': member.marriageData.uuid,
             'Marriage Date': member.marriageData.date 
               ? new Date(member.marriageData.date).toLocaleDateString()
               : 'Not Set',
@@ -79,11 +80,18 @@ export const UniverseSettings: React.FC = () => {
   );
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center space-x-2 mb-6">
+        <Settings className="w-6 h-6 text-gray-500" />
+        <h2 className="text-2xl font-semibold text-gray-800">Universe Settings</h2>
+      </div>
+
+      {/* Universe Information */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
           <Settings className="w-6 h-6 text-purple-500" />
-          Universe Settings
+          Universe Configuration
         </h2>
         <p className="mt-2 text-sm text-gray-600">
           Current universe configuration and preferences
@@ -114,7 +122,7 @@ export const UniverseSettings: React.FC = () => {
           'Parents': user.adminData.familyBox.filter(m => ['Mother', 'Father'].includes(m.relationship)).length,
           'Children': user.adminData.familyBox.filter(m => ['Son', 'Daughter'].includes(m.relationship)).length,
           'Siblings': user.adminData.familyBox.filter(m => ['Brother', 'Sister'].includes(m.relationship)).length,
-          'Total Marriages': user.adminData.familyBox.filter(m => m.marriageData).length / 2, // Divide by 2 as each marriage is counted twice
+          'Total Marriages': user.adminData.familyBox.filter(m => m.marriageData).length / 2
         }, <Users className="w-5 h-5 text-indigo-500" />)}
 
         {/* Asset Statistics */}
@@ -123,17 +131,59 @@ export const UniverseSettings: React.FC = () => {
           'Companies': user.adminData.assetBox.filter(a => a.type === 'company').length,
           'Personal Assets': user.adminData.assetBox.filter(a => a.type === 'personal').length
         }, <Building2 className="w-5 h-5 text-yellow-500" />)}
-
-        {/* Family Members Detail */}
-        {user.adminData && user.adminData.familyBox.length > 0 && (
-          <section>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Family Members</h3>
-            <div className="space-y-4">
-              {user.adminData.familyBox.map(renderFamilyMemberSection)}
-            </div>
-          </section>
-        )}
       </div>
+
+      {/* Admin Section */}
+      {user && user.role === 'admin' && user.adminData && (
+        <div className="mb-6">
+          <div className="flex items-center space-x-2 mb-3">
+            <Shield className="w-5 h-5 text-gray-500" />
+            <h3 className="text-xl font-medium text-gray-700">Admin Information</h3>
+          </div>
+          {renderMetadataSection('Basic Information', {
+            'First Name': user.adminData.firstName,
+            'Last Name': user.adminData.lastName,
+            'Gender': user.adminData.gender,
+            'Birth Year': user.adminData.birthYear,
+            'Exact Birthday': user.adminData.exactBirthday || 'Not Set',
+            'Country': user.adminData.country,
+            'Role': user.role
+          })}
+          {user.adminData.familyBox.some(member => member.relationship === 'Spouse') && (
+            (() => {
+              const spouse = user.adminData.familyBox.find(m => m.relationship === 'Spouse');
+              return renderMetadataSection('Marriage Information', {
+                'Marriage ID': spouse?.marriageData?.uuid || 'N/A',
+                'Marriage Status': spouse?.marriageData?.status || 'N/A',
+                'Spouse Name': `${spouse?.firstName || ''} ${spouse?.lastName || ''}`.trim() || 'N/A'
+              }, <Heart className="w-5 h-5 text-red-500" />);
+            })()
+          )}
+          {renderMetadataSection('Admin Data', {
+            'Universe ID': user.adminData.universeId,
+            'Generation Level': user.adminData.generationLevel,
+            'Family Members': user.adminData.familyBox?.length || 0,
+            'Assets': user.adminData.assetBox?.length || 0,
+            'Status': user.adminData.status
+          })}
+          {renderMetadataSection('Tracking', {
+            'Created At': formatDate(user.adminData.createdAt),
+            'Updated At': formatDate(user.adminData.updatedAt),
+            'Version': user.adminData.version,
+            'Created By': user.adminData.createdBy,
+            'Updated By': user.adminData.updatedBy
+          })}
+          {/* Family Members Detail */}
+          {user.adminData && user.adminData.familyBox.length > 0 && (
+            <section>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Family Members</h3>
+              <div className="space-y-4">
+                {user.adminData.familyBox.map(renderFamilyMemberSection)}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
     </div>
   );
 }; 
